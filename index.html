@@ -12,16 +12,12 @@
     <meta name="apple-mobile-web-app-title" content="Knoten Roulette">
     <meta name="theme-color" content="#0d0d11">
     
-    <!-- Dynamic Embedded SVG Apple Touch Icon -->
     <link rel="apple-touch-icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='110' fill='%23111118'/><rect x='20' y='20' width='472' height='472' rx='90' fill='none' stroke='%23e50914' stroke-width='16'/><path d='M256 90 L380 180 L380 340 L256 430 L132 340 L132 180 Z' fill='none' stroke='%23e50914' stroke-width='24'/><circle cx='256' cy='250' r='55' fill='none' stroke='%23ffcc00' stroke-width='22'/><path d='M200 250 C200 200, 312 200, 312 250 C312 300, 200 300, 200 250 Z' fill='none' stroke='%23ffffff' stroke-width='16'/></svg>">
     
-    <!-- YouTube IFrame API -->
-    <script src="https://www.youtube.com/iframe_api"></script>
-
     <style>
         :root {
             --bg-color: #0d0d11;
-            --card-bg: rgba(25, 25, 35, 0.85);
+            --card-bg: rgba(25, 25, 35, 0.75);
             --primary-red: #e50914;
             --accent-gold: #ffcc00;
             --text-light: #f5f5f7;
@@ -38,10 +34,10 @@
         body {
             margin: 0;
             padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
             background-color: var(--bg-color);
             background-image: 
-                radial-gradient(circle at 50% 0%, rgba(229, 9, 20, 0.18), transparent 70%),
+                radial-gradient(circle at 50% 0%, rgba(229, 9, 20, 0.15), transparent 70%),
                 radial-gradient(circle at 50% 100%, rgba(20, 20, 30, 0.8), transparent 80%);
             color: var(--text-light);
             display: flex;
@@ -82,13 +78,13 @@
             border-radius: 12px;
             padding: 3px;
             margin: 18px 0 10px 0;
-            width: 320px;
+            width: 310px;
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .nav-btn {
             flex: 1;
-            padding: 9px 0;
+            padding: 8px 0;
             border: none;
             background: transparent;
             color: var(--text-dim);
@@ -131,8 +127,8 @@
             width: 310px;
             height: 310px;
             border-radius: 50%;
-            background: radial-gradient(circle, rgba(229, 9, 20, 0.25) 0%, transparent 70%);
-            filter: blur(12px);
+            background: radial-gradient(circle, rgba(229, 9, 20, 0.2) 0%, transparent 70%);
+            filter: blur(10px);
             z-index: 1;
         }
 
@@ -369,6 +365,7 @@
             line-height: 1.35;
         }
 
+        /* Video Modal */
         #video-modal {
             display: none;
             position: fixed;
@@ -376,7 +373,7 @@
             left: 0;
             width: 100vw;
             height: 100vh;
-            background-color: rgba(0, 0, 0, 0.93);
+            background-color: rgba(0, 0, 0, 0.92);
             backdrop-filter: blur(15px);
             -webkit-backdrop-filter: blur(15px);
             z-index: 1000;
@@ -390,66 +387,77 @@
             position: absolute;
             top: calc(env(safe-area-inset-top, 20px) + 15px);
             right: 20px;
-            background: rgba(255, 255, 255, 0.15);
+            background: rgba(255, 255, 255, 0.1);
             border: none;
             color: white;
-            width: 42px;
-            height: 42px;
+            width: 40px;
+            height: 40px;
             border-radius: 50%;
-            font-size: 24px;
+            font-size: 22px;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: background 0.2s;
-        }
-
-        .close-btn:active {
-            background: rgba(255, 255, 255, 0.3);
-        }
-
-        .modal-body {
-            width: 100%;
-            max-width: 560px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 14px;
         }
 
         .iframe-container {
             width: 100%;
+            max-width: 560px;
             aspect-ratio: 16 / 9;
             background-color: #000;
             border-radius: 16px;
             overflow: hidden;
             box-shadow: 0 10px 40px rgba(0,0,0,0.8);
-            border: 1px solid rgba(255,255,255,0.12);
+            border: 1px solid rgba(255,255,255,0.1);
+            position: relative;
         }
 
-        #yt-player-container {
+        #yt-player {
             width: 100%;
             height: 100%;
         }
 
         .audio-toggle-btn {
-            background: linear-gradient(180deg, #3a3a4c 0%, #22222e 100%);
-            color: #ffcc00;
-            border: 1px solid rgba(255, 204, 0, 0.4);
-            padding: 12px 24px;
-            font-size: 14px;
-            font-weight: 700;
-            border-radius: 25px;
+            margin-top: 15px;
+            background: rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
             cursor: pointer;
             display: flex;
             align-items: center;
             gap: 8px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
-            transition: transform 0.15s, background 0.2s;
+            transition: background 0.2s;
         }
 
         .audio-toggle-btn:active {
-            transform: scale(0.96);
+            background: rgba(255, 255, 255, 0.25);
+        }
+
+        #error-fallback {
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #111;
+            color: #fff;
+            padding: 20px;
+            text-align: center;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 12px;
+        }
+
+        #error-fallback a {
+            color: var(--accent-gold);
+            text-decoration: underline;
+            font-weight: bold;
         }
     </style>
 </head>
@@ -465,6 +473,7 @@
         </div>
     </header>
 
+    <!-- ROULETTE VIEW -->
     <div id="roulette-view" class="view-content active">
         <div class="wheel-stage">
             <div class="wheel-glow"></div>
@@ -480,45 +489,45 @@
             <div id="knot-name"></div>
             <div id="knot-desc"></div>
             <button id="video-btn" class="video-btn">
-                ▶ Erklärvideo ansehen (Stumm)
+                ▶ Erklärvideo ansehen
             </button>
         </div>
     </div>
 
+    <!-- LIBRARY VIEW -->
     <div id="library-view" class="view-content">
         <div class="search-box">
             <input type="text" id="search-input" class="search-input" placeholder="🔍 Knoten oder Verwendungszweck suchen..." oninput="filterLibrary()">
         </div>
-        <div class="knot-list" id="knot-list">
-            <!-- Cards rendered via JavaScript -->
-        </div>
+        <div class="knot-list" id="knot-list"></div>
     </div>
 
+    <!-- Video Modal -->
     <div id="video-modal">
         <button class="close-btn" id="close-modal">&times;</button>
-        <div class="modal-body">
-            <div class="iframe-container">
-                <div id="yt-player-container"></div>
+        <div class="iframe-container">
+            <div id="yt-player"></div>
+            <div id="error-fallback">
+                <p style="margin:0; font-size: 14px;">⚠️ Video kann nicht direkt eingebettet werden (Fehler 153/150).</p>
+                <a id="external-yt-link" href="#" target="_blank" rel="noopener">In YouTube-App / Browser öffnen ↗</a>
             </div>
-            <button id="audio-toggle-btn" class="audio-toggle-btn" onclick="toggleAudio()">
-                🔇 Ton einschalten
-            </button>
         </div>
+        <button id="audio-toggle-btn" class="audio-toggle-btn" onclick="toggleAudio()">
+            🔇 Ton ist stummgeschaltet – Tippen für Ton
+        </button>
     </div>
 
+    <!-- YouTube IFrame API -->
+    <script src="https://www.youtube.com/iframe_api"></script>
+
     <script>
-        // Service Worker Registration for PWA support
+        // Service Worker Registrierung
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js').then((reg) => {
-                    console.log('ServiceWorker registered:', reg.scope);
-                }).catch((err) => {
-                    console.log('ServiceWorker failed:', err);
-                });
+                navigator.serviceWorker.register('./sw.js').catch(() => {});
             });
         }
 
-        // Knoten-Datenbank nach FwDV 1 & Wettbewerbsordnung
         const knots = [
             { 
                 name: "Mastwurf gestochen", 
@@ -612,11 +621,56 @@
         const videoModal = document.getElementById("video-modal");
         const closeModal = document.getElementById("close-modal");
         const knotListContainer = document.getElementById("knot-list");
+        const errorFallback = document.getElementById("error-fallback");
+        const externalYtLink = document.getElementById("external-yt-link");
         const audioToggleBtn = document.getElementById("audio-toggle-btn");
 
         const numSlices = knots.length;
         const sliceAngle = (2 * Math.PI) / numSlices;
         let currentRotation = 0;
+
+        let player = null;
+        let isApiReady = false;
+        let currentVideoId = "";
+
+        function onYouTubeIframeAPIReady() {
+            isApiReady = true;
+            player = new YT.Player('yt-player', {
+                height: '100%',
+                width: '100%',
+                playerVars: {
+                    'autoplay': 1,
+                    'mute': 1,
+                    'playsinline': 1,
+                    'rel': 0,
+                    'origin': window.location.origin || '*'
+                },
+                events: {
+                    'onReady': onPlayerReady,
+                    'onStateChange': onPlayerStateChange,
+                    'onError': onPlayerError
+                }
+            });
+        }
+
+        function onPlayerReady(event) {
+            event.target.mute();
+        }
+
+        function onPlayerStateChange(event) {
+            if (event.data === YT.PlayerState.PLAYING || event.data === YT.PlayerState.BUFFERING) {
+                if (player && player.isMuted && !player.isMuted()) {
+                    player.mute();
+                }
+            }
+        }
+
+        function onPlayerError(event) {
+            if ([2, 5, 100, 101, 150, 153].includes(event.data)) {
+                errorFallback.style.display = "flex";
+                externalYtLink.href = `https://www.youtube.com/watch?v=${currentVideoId}`;
+            }
+        }
 
         function switchView(view) {
             document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
@@ -632,7 +686,6 @@
             }
         }
 
-        // Web Audio API tick sound engine
         let audioCtx = null;
         function playTick() {
             try {
@@ -734,72 +787,38 @@
             resultArea.classList.add("show");
         });
 
-        let ytPlayer = null;
-        let pendingVideoId = null;
-        let pendingStart = 0;
-
-        function onYouTubeIframeAPIReady() {
-            ytPlayer = new YT.Player('yt-player-container', {
-                height: '100%',
-                width: '100%',
-                playerVars: {
-                    'autoplay': 1,
-                    'mute': 1,
-                    'controls': 1,
-                    'rel': 0,
-                    'playsinline': 1
-                },
-                events: {
-                    'onReady': onPlayerReady
-                }
-            });
-        }
-
-        function onPlayerReady(event) {
-            // Strictly enforce mute state on player initialization
-            event.target.mute();
-            if (pendingVideoId) {
-                event.target.loadVideoById({
-                    videoId: pendingVideoId,
-                    startSeconds: pendingStart
-                });
-                event.target.mute();
-            }
-        }
-
         function openVideo(videoId, startSeconds = 0) {
+            currentVideoId = videoId;
+            errorFallback.style.display = "none";
             videoModal.style.display = "flex";
-            pendingVideoId = videoId;
-            pendingStart = startSeconds;
+            
+            audioToggleBtn.textContent = "🔇 Ton ist stummgeschaltet – Tippen für Ton";
 
-            if (ytPlayer && typeof ytPlayer.loadVideoById === 'function') {
-                ytPlayer.loadVideoById({
+            if (isApiReady && player && typeof player.loadVideoById === 'function') {
+                player.mute();
+                player.loadVideoById({
                     videoId: videoId,
                     startSeconds: startSeconds
                 });
-                ytPlayer.mute(); // Programmatically force muted video
-                ytPlayer.playVideo();
             }
-
-            audioToggleBtn.innerHTML = "🔇 Ton einschalten";
         }
 
         function toggleAudio() {
-            if (!ytPlayer || typeof ytPlayer.isMuted !== 'function') return;
-
-            if (ytPlayer.isMuted()) {
-                ytPlayer.unMute();
-                audioToggleBtn.innerHTML = "🔊 Ton ausschalten";
-            } else {
-                ytPlayer.mute();
-                audioToggleBtn.innerHTML = "🔇 Ton einschalten";
+            if (player && typeof player.isMuted === 'function') {
+                if (player.isMuted()) {
+                    player.unMute();
+                    audioToggleBtn.textContent = "🔊 Ton ist AN – Tippen für Stumm";
+                } else {
+                    player.mute();
+                    audioToggleBtn.textContent = "🔇 Ton ist stummgeschaltet – Tippen für Ton";
+                }
             }
         }
 
         closeModal.addEventListener("click", () => {
             videoModal.style.display = "none";
-            if (ytPlayer && typeof ytPlayer.stopVideo === 'function') {
-                ytPlayer.stopVideo();
+            if (player && typeof player.stopVideo === 'function') {
+                player.stopVideo();
             }
         });
 
@@ -816,7 +835,7 @@
                     <div class="knot-detail">${knot.desc}</div>
                     <div class="safety-note">${knot.safety}</div>
                     <button class="video-btn" onclick="openVideo('${knot.video}', ${knot.start})">
-                        ▶ Erklärvideo abspielen (Stumm) ${knot.start > 0 ? `(ab ${Math.floor(knot.start/60)}:00 min)` : ''}
+                        ▶ Erklärvideo abspielen ${knot.start > 0 ? `(ab ${Math.floor(knot.start/60)}:00 min)` : ''}
                     </button>
                 `;
                 knotListContainer.appendChild(card);
