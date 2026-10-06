@@ -1,0 +1,16 @@
+{
+  "name": "Feuerwehrknoten Roulette",
+  "short_name": "KnotenApp",
+  "description": "Feuerwehrknoten Roulette & FwDV 1 Nachschlagewerk für Feuerwehr & Jugendfeuerwehr",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0d0d11",
+  "theme_color": "#0d0d11",
+  "icons": [
+    {
+      "src": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='110' fill='%23e50914'/><path d='M256 90 L380 180 L380 340 L256 430 L132 340 L132 180 Z' fill='none' stroke='%23ffffff' stroke-width='24'/><circle cx='256' cy='250' r='50' fill='none' stroke='%23ffcc00' stroke-width='20'/></svg>",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml"
+    }
+  ]
+}

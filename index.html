@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Feuerwehrknoten Roulette & FwDV 1 Nachschlagewerk</title>
+    
+    <!-- PWA Manifest & App Icons -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Knoten Roulette">
+    <meta name="theme-color" content="#0d0d11">
+    
+    <!-- Dynamic Embedded SVG Apple Touch Icon for Home Screen -->
+    <link rel="apple-touch-icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='110' fill='%23111118'/><rect x='20' y='20' width='472' height='472' rx='90' fill='none' stroke='%23e50914' stroke-width='16'/><path d='M256 90 L380 180 L380 340 L256 430 L132 340 L132 180 Z' fill='none' stroke='%23e50914' stroke-width='24'/><circle cx='256' cy='250' r='55' fill='none' stroke='%23ffcc00' stroke-width='22'/><path d='M200 250 C200 200, 312 200, 312 250 C312 300, 200 300, 200 250 Z' fill='none' stroke='%23ffffff' stroke-width='16'/></svg>">
+    
+    <style>
+        :root {
+            --bg-color: #0d0d11;
+            --card-bg: rgba(25, 25, 35, 0.75);
+            --primary-red: #e50914;
+            --accent-gold: #ffcc00;
+            --text-light: #f5f5f7;
+            --text-dim: #a1a1a6;
+            --border-glow: rgba(229, 9, 20, 0.3);
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            background-image: 
+                radial-gradient(circle at 50% 0%, rgba(229, 9, 20, 0.15), transparent 70%),
+                radial-gradient(circle at 50% 100%, rgba(20, 20, 30, 0.8), transparent 80%);
+            color: var(--text-light);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            overflow-x: hidden;
+            padding-bottom: calc(env(safe-area-inset-bottom, 20px) + 20px);
+        }
+
+        header {
+            margin-top: calc(env(safe-area-inset-top, 20px) + 15px);
+            text-align: center;
+            padding: 0 20px;
+        }
+
+        h1 {
+            font-size: 26px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            margin: 0 0 4px 0;
+            background: linear-gradient(180deg, #ffffff 0%, #d1d1d6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        p.subtitle {
+            color: var(--text-dim);
+            font-size: 13px;
+            font-weight: 500;
+            margin: 0;
+            letter-spacing: 0.2px;
+        }
+
+        /* Navigation Segment Control */
+        .nav-switch {
+            display: flex;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 3px;
+            margin: 18px 0 10px 0;
+            width: 310px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .nav-btn {
+            flex: 1;
+            padding: 8px 0;
+            border: none;
+            background: transparent;
+            color: var(--text-dim);
+            font-size: 13px;
+            font-weight: 600;
+            border-radius: 9px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .nav-btn.active {
+            background: var(--primary-red);
+            color: #ffffff;
+            box-shadow: 0 2px 8px rgba(229, 9, 20, 0.4);
+        }
+
+        /* Views */
+        .view-content {
+            display: none;
+            width: 100%;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .view-content.active {
+            display: flex;
+        }
+
+        /* Roulette Stage */
+        .wheel-stage {
+            position: relative;
+            margin: 20px auto 15px auto;
+            width: 320px;
+            height: 320px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .wheel-glow {
+            position: absolute;
+            width: 310px;
+            height: 310px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(229, 9, 20, 0.2) 0%, transparent 70%);
+            filter: blur(10px);
+            z-index: 1;
+        }
+
+        .pointer {
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 24px;
+            height: 32px;
+            z-index: 20;
+            filter: drop-shadow(0px 4px 6px rgba(0,0,0,0.8));
+        }
+
+        .pointer::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 0;
+            height: 0;
+            border-left: 12px solid transparent;
+            border-right: 12px solid transparent;
+            border-top: 28px solid var(--primary-red);
+        }
+
+        #wheel-canvas {
+            position: relative;
+            z-index: 10;
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            box-shadow: 0 0 25px rgba(0, 0, 0, 0.9), 0 0 0 6px rgba(255, 255, 255, 0.05);
+            transition: transform 4.5s cubic-bezier(0.15, 0.85, 0.15, 1);
+            transform: rotate(0deg);
+        }
+
+        .center-pin {
+            position: absolute;
+            width: 44px;
+            height: 44px;
+            background: radial-gradient(circle, #2c2c36 0%, #111116 100%);
+            border: 3px solid #3a3a4c;
+            border-radius: 50%;
+            z-index: 15;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .center-pin::after {
+            content: '';
+            width: 14px;
+            height: 14px;
+            background: var(--primary-red);
+            border-radius: 50%;
+            box-shadow: 0 0 8px var(--primary-red);
+        }
+
+        .spin-btn {
+            background: linear-gradient(180deg, #e50914 0%, #b20710 100%);
+            color: white;
+            border: none;
+            padding: 16px 42px;
+            font-size: 18px;
+            font-weight: 700;
+            border-radius: 30px;
+            box-shadow: 0 8px 25px rgba(229, 9, 20, 0.4), inset 0 1px 0 rgba(255,255,255,0.3);
+            cursor: pointer;
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+            margin-top: 5px;
+            letter-spacing: 0.3px;
+        }
+
+        .spin-btn:active {
+            transform: scale(0.94);
+            box-shadow: 0 4px 12px rgba(229, 9, 20, 0.3);
+        }
+
+        .spin-btn:disabled {
+            background: #2c2c35;
+            color: #666;
+            box-shadow: none;
+            cursor: not-allowed;
+        }
+
+        #result-area {
+            margin-top: 18px;
+            width: 90%;
+            max-width: 360px;
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 20px;
+            text-align: center;
+            opacity: 0;
+            transform: translateY(20px) scale(0.95);
+            transition: all 0.5s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+            pointer-events: none;
+        }
+
+        #result-area.show {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+            pointer-events: auto;
+        }
+
+        .result-tag {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--accent-gold);
+            margin-bottom: 6px;
+        }
+
+        #knot-name {
+            font-size: 22px;
+            font-weight: 800;
+            color: #ffffff;
+            margin-bottom: 8px;
+            line-height: 1.2;
+        }
+
+        #knot-desc {
+            font-size: 13px;
+            color: var(--text-dim);
+            line-height: 1.4;
+            margin-bottom: 16px;
+        }
+
+        .video-btn {
+            background: rgba(255, 255, 255, 0.08);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            padding: 12px 20px;
+            font-size: 14px;
+            font-weight: 600;
+            border-radius: 12px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            transition: background 0.2s, transform 0.15s;
+        }
+
+        .video-btn:active {
+            background: rgba(255, 255, 255, 0.18);
+            transform: scale(0.98);
+        }
+
+        /* Library View Styling */
+        .search-box {
+            width: 90%;
+            max-width: 360px;
+            margin-bottom: 15px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px 16px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: #fff;
+            font-size: 14px;
+            outline: none;
+        }
+
+        .search-input::placeholder {
+            color: #777;
+        }
+
+        .knot-list {
+            width: 90%;
+            max-width: 360px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .knot-card {
+            background: var(--card-bg);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 16px;
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+        }
+
+        .knot-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .knot-title {
+            font-size: 17px;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .knot-badge {
+            font-size: 10px;
+            padding: 3px 8px;
+            border-radius: 6px;
+            background: rgba(229, 9, 20, 0.2);
+            color: #ff6b6b;
+            border: 1px solid rgba(229, 9, 20, 0.4);
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .knot-detail {
+            font-size: 13px;
+            color: var(--text-dim);
+            line-height: 1.45;
+            margin-bottom: 12px;
+        }
+
+        .safety-note {
+            font-size: 12px;
+            background: rgba(255, 204, 0, 0.08);
+            border-left: 3px solid var(--accent-gold);
+            color: #e6c200;
+            padding: 8px 10px;
+            border-radius: 0 8px 8px 0;
+            margin-bottom: 12px;
+            line-height: 1.35;
+        }
+
+        /* Video Modal */
+        #video-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0.92);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            z-index: 1000;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: calc(env(safe-area-inset-top, 20px) + 15px);
+            right: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            font-size: 22px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .iframe-container {
+            width: 100%;
+            max-width: 560px;
+            aspect-ratio: 16 / 9;
+            background-color: #000;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Feuerwehrknoten</h1>
+        <p class="subtitle">Roulette & FwDV 1 Nachschlagewerk</p>
+        
+        <div class="nav-switch">
+            <button class="nav-btn active" onclick="switchView('roulette')">🎲 Roulette</button>
+            <button class="nav-btn" onclick="switchView('library')">📖 FwDV 1 Bibliothek</button>
+        </div>
+    </header>
+
+    <!-- ROULETTE VIEW -->
+    <div id="roulette-view" class="view-content active">
+        <div class="wheel-stage">
+            <div class="wheel-glow"></div>
+            <div class="pointer"></div>
+            <canvas id="wheel-canvas" width="600" height="600"></canvas>
+            <div class="center-pin"></div>
+        </div>
+
+        <button id="spin-btn" class="spin-btn">Knoten Drehen</button>
+
+        <div id="result-area">
+            <div class="result-tag">Ausgewählter Knoten</div>
+            <div id="knot-name"></div>
+            <div id="knot-desc"></div>
+            <button id="video-btn" class="video-btn">
+                ▶ Erklärvideo ansehen
+            </button>
+        </div>
+    </div>
+
+    <!-- LIBRARY VIEW -->
+    <div id="library-view" class="view-content">
+        <div class="search-box">
+            <input type="text" id="search-input" class="search-input" placeholder="🔍 Knoten oder Verwendungszweck suchen..." oninput="filterLibrary()">
+        </div>
+        <div class="knot-list" id="knot-list">
+            <!-- Cards rendered via JavaScript -->
+        </div>
+    </div>
+
+    <!-- Video Modal -->
+    <div id="video-modal">
+        <button class="close-btn" id="close-modal">&times;</button>
+        <div class="iframe-container">
+            <iframe id="yt-iframe" src="" allow="autoplay; encrypted-media; fullscreen" allowfullscreen></iframe>
+        </div>
+    </div>
+
+    <script>
+        // Service Worker Registrierung für Offline-Modus
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js').then((reg) => {
+                    console.log('ServiceWorker erfolgreich registriert:', reg.scope);
+                }).catch((err) => {
+                    console.log('ServiceWorker Fehler:', err);
+                });
+            });
+        }
+
+        // Knotenliste
+        const knots = [
+            { 
+                name: "Mastwurf gestochen", 
+                type: "Gestochen",
+                video: "_8CKJrBWJTM", 
+                start: 0, 
+                desc: "Zum Anschlagen an festen Objekten (z. B. Pfahl, Baum oder Geländer) oder zum Sichern der Feuerwehrleine.",
+                safety: "⚠️ FwDV 1 Hinweis: Bei Zugbelastung muss das freie Leinenende zusätzlich mit einem Spierenstich gesichert werden!"
+            },
+            { 
+                name: "Mastwurf gelegt", 
+                type: "Gelegt",
+                video: "gqkZywQvbWg", 
+                start: 0, 
+                desc: "Zum Anschlagen an offenen Leitungsenden, Armaturen oder Geräten (z. B. Saugkorb/Saugstrahlrohr).",
+                safety: "⚠️ Hinweis: Wird um den Saugkorb gelegt und mit Halbschlag zur Ventilabsicherung ergänzt."
+            },
+            { 
+                name: "Doppelschlinge gestochen", 
+                type: "Gestochen",
+                video: "WaN4_eUFA90", 
+                start: 0, 
+                desc: "Formstabile Doppelschlinge zum Halten, Sichern oder Aufziehen schwerer Gegenstände und Leitern.",
+                safety: "⚠️ Hinweis: Beide Schlingen müssen gleichmäßig verteilt belastet werden."
+            },
+            { 
+                name: "Doppelschlinge gelegt", 
+                type: "Gelegt",
+                video: "gzuLVhgIlWQ", 
+                start: 0, 
+                desc: "Schnelles Vorbereiten der Doppelschlinge zum Aufnehmen von Geräten (z. B. Strahlrohr mit Schlauch).",
+                safety: "⚠️ Hinweis: Vor dem Anheben auf richtigen Sitz und parallelen Leinenverlauf prüfen."
+            },
+            { 
+                name: "Zimmermannsschlag", 
+                type: "Befestigung",
+                video: "nj7EwRKI598", 
+                start: 0, 
+                desc: "Befestigungsknoten zum Hochziehen von langem Rundholz, Ästen oder Saugschläuchen.",
+                safety: "⚠️ FwDV 1 Hinweis: Nur auf Zug belastbar! Muss sich nach Entlastung leicht wieder lösen lassen."
+            },
+            { 
+                name: "Schotenstich m. Aufziehs.", 
+                type: "Wettbewerb / Jugend",
+                video: "cZedtIpuSeE", 
+                start: 180, 
+                desc: "Verbindung zweier Leinen (auch unterschiedlicher Stärke) mit schneller Lösefunktion im Wettbewerb.",
+                safety: "⚠️ Jugendfeuerwehr-Reglement: Die Aufziehschlaufe muss ordnungsgemäß gesteckt sein, um Punkteabzug zu vermeiden."
+            },
+            { 
+                name: "Schotenstich o. Aufziehs.", 
+                type: "Standard",
+                video: "SP3vMCnGyQg", 
+                start: 0, 
+                desc: "Zum sicheren Verbinden von zwei Leinen gleicher oder unterschiedlicher Stärke.",
+                safety: "⚠️ FwDV 1 Hinweis: Nicht zur Personensicherung zugelassen!"
+            },
+            { 
+                name: "Brustbund", 
+                type: "Rettung / Sicherung",
+                video: "8PZoAhc9hFw", 
+                start: 0, 
+                desc: "Rettungsbund mit Pfahlstich und Spierenstich zur Selbstrettung oder Personensicherung.",
+                safety: "⚠️ FwDV 1 Vorschrift: Ausführung zwingend mit Pfahlstich & Sicherung durch Spierenstich!"
+            },
+            { 
+                name: "Achterknoten", 
+                type: "Sicherung",
+                video: "fJ8DBdMO8mE", 
+                start: 0, 
+                desc: "Sicherheitsknoten zum Einbinden oder als Stoppknoten am Leinenende gegen Durchrutschen.",
+                safety: "⚠️ FwDV 1 Hinweis: Standardknoten zur Sicherung in Karabinern bei der Personensicherung."
+            },
+            { 
+                name: "Halbmastwurf", 
+                type: "Dynamische Sicherung",
+                video: "uN95KVRYFkU", 
+                start: 0, 
+                desc: "Dynamischer Sicherungsknoten (HMS) zum kontrollierten Sichern und Ablassen von Personen oder Lasten.",
+                safety: "⚠️ FwDV 1 Vorschrift: Nur in Verbindung mit HMS-Karabiner mit Schraub-/Autolock-Sicherung verwenden!"
+            }
+        ];
+
+        // Canvas & UI Elements
+        const canvas = document.getElementById("wheel-canvas");
+        const ctx = canvas.getContext("2d");
+        const spinBtn = document.getElementById("spin-btn");
+        const resultArea = document.getElementById("result-area");
+        const knotNameDisplay = document.getElementById("knot-name");
+        const knotDescDisplay = document.getElementById("knot-desc");
+        const videoBtn = document.getElementById("video-btn");
+        const videoModal = document.getElementById("video-modal");
+        const iframe = document.getElementById("yt-iframe");
+        const closeModal = document.getElementById("close-modal");
+        const knotListContainer = document.getElementById("knot-list");
+
+        const numSlices = knots.length;
+        const sliceAngle = (2 * Math.PI) / numSlices;
+        let currentRotation = 0;
+
+        // View Navigation
+        function switchView(view) {
+            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.view-content').forEach(v => v.classList.remove('active'));
+
+            if (view === 'roulette') {
+                document.querySelectorAll('.nav-btn')[0].classList.add('active');
+                document.getElementById('roulette-view').classList.add('active');
+            } else {
+                document.querySelectorAll('.nav-btn')[1].classList.add('active');
+                document.getElementById('library-view').classList.add('active');
+                renderLibrary(knots);
+            }
+        }
+
+        // Web Audio API Tick Sound
+        let audioCtx = null;
+        function playTick() {
+            try {
+                if (!audioCtx) {
+                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(120, audioCtx.currentTime + 0.03);
+                
+                gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.03);
+
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.03);
+            } catch (e) {}
+        }
+
+        // Draw Canvas Wheel
+        function drawWheel() {
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const radius = centerX - 10;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            for (let i = 0; i < numSlices; i++) {
+                const startAngle = -Math.PI / 2 + i * sliceAngle;
+                const endAngle = startAngle + sliceAngle;
+
+                ctx.beginPath();
+                ctx.moveTo(centerX, centerY);
+                ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+                ctx.fillStyle = i % 2 === 0 ? "#b71c1c" : "#1c1c24";
+                ctx.fill();
+
+                ctx.strokeStyle = "rgba(0,0,0,0.5)";
+                ctx.lineWidth = 3;
+                ctx.stroke();
+
+                ctx.save();
+                ctx.translate(centerX, centerY);
+                ctx.rotate(startAngle + sliceAngle / 2);
+                ctx.textAlign = "right";
+                ctx.fillStyle = "#ffffff";
+                ctx.font = "bold 21px -apple-system, BlinkMacSystemFont, Arial, sans-serif";
+                
+                ctx.fillText(knots[i].name, radius - 25, 7);
+                ctx.restore();
+            }
+        }
+
+        drawWheel();
+
+        // Spin Engine
+        spinBtn.addEventListener("click", () => {
+            if (spinBtn.disabled) return;
+            
+            spinBtn.disabled = true;
+            resultArea.classList.remove("show");
+
+            const spins = (Math.floor(Math.random() * 4) + 5) * 360;
+            const randomDegree = Math.floor(Math.random() * 360);
+            
+            currentRotation += (spins + randomDegree);
+            canvas.style.transform = `rotate(${currentRotation}deg)`;
+
+            let tickCount = 0;
+            const totalTicks = 28;
+            const tickInterval = setInterval(() => {
+                playTick();
+                tickCount++;
+                if (tickCount >= totalTicks) {
+                    clearInterval(tickInterval);
+                }
+            }, 120);
+        });
+
+        // Rotation End Handler
+        canvas.addEventListener("transitionend", () => {
+            spinBtn.disabled = false;
+
+            const normalizedRotation = currentRotation % 360;
+            const angleAtTop = (360 - normalizedRotation) % 360;
+            const sliceSize = 360 / numSlices;
+            const winningIndex = Math.floor(angleAtTop / sliceSize);
+            
+            const winner = knots[winningIndex];
+
+            knotNameDisplay.textContent = winner.name;
+            knotDescDisplay.textContent = winner.desc;
+            
+            videoBtn.onclick = () => openVideo(winner.video, winner.start);
+
+            resultArea.classList.add("show");
+        });
+
+        // Open Video Modal
+        function openVideo(videoId, startSeconds = 0) {
+            iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&start=${startSeconds}`;
+            videoModal.style.display = "flex";
+        }
+
+        closeModal.addEventListener("click", () => {
+            videoModal.style.display = "none";
+            iframe.src = "";
+        });
+
+        // Render FwDV 1 Library
+        function renderLibrary(items) {
+            knotListContainer.innerHTML = "";
+            items.forEach(knot => {
+                const card = document.createElement("div");
+                card.className = "knot-card";
+                card.innerHTML = `
+                    <div class="knot-card-header">
+                        <div class="knot-title">${knot.name}</div>
+                        <div class="knot-badge">${knot.type}</div>
+                    </div>
+                    <div class="knot-detail">${knot.desc}</div>
+                    <div class="safety-note">${knot.safety}</div>
+                    <button class="video-btn" onclick="openVideo('${knot.video}', ${knot.start})">
+                        ▶ Erklärvideo abspielen ${knot.start > 0 ? `(ab ${Math.floor(knot.start/60)}:00 min)` : ''}
+                    </button>
+                `;
+                knotListContainer.appendChild(card);
+            });
+        }
+
+        // Search Filter
+        function filterLibrary() {
+            const query = document.getElementById("search-input").value.toLowerCase();
+            const filtered = knots.filter(k => 
+                k.name.toLowerCase().includes(query) || 
+                k.desc.toLowerCase().includes(query) || 
+                k.type.toLowerCase().includes(query)
+            );
+            renderLibrary(filtered);
+        }
+    </script>
+</body>
+</html>
