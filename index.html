@@ -13,7 +13,7 @@
     <style>
         :root {
             --bg-color: #0d0d11;
-            --card-bg: rgba(25, 25, 35, 0.75);
+            --card-bg: rgba(25, 25, 35, 0.85);
             --primary-red: #e50914;
             --accent-gold: #ffcc00;
             --text-light: #f5f5f7;
@@ -44,7 +44,7 @@
         }
 
         header {
-            margin-top: 25px;
+            margin-top: calc(env(safe-area-inset-top, 20px) + 15px);
             text-align: center;
             padding: 0 20px;
         }
@@ -52,13 +52,17 @@
         h1 {
             font-size: 26px;
             font-weight: 800;
+            letter-spacing: -0.5px;
             margin: 0 0 4px 0;
-            color: #ffffff;
+            background: linear-gradient(180deg, #ffffff 0%, #d1d1d6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
 
         p.subtitle {
             color: var(--text-dim);
             font-size: 13px;
+            font-weight: 500;
             margin: 0;
         }
 
@@ -82,11 +86,13 @@
             font-weight: 600;
             border-radius: 9px;
             cursor: pointer;
+            transition: all 0.2s ease;
         }
 
         .nav-btn.active {
             background: var(--primary-red);
             color: #ffffff;
+            box-shadow: 0 2px 8px rgba(229, 9, 20, 0.4);
         }
 
         .view-content {
@@ -115,8 +121,8 @@
             width: 310px;
             height: 310px;
             border-radius: 50%;
-            background: radial-gradient(circle, rgba(229, 9, 20, 0.2) 0%, transparent 70%);
-            filter: blur(10px);
+            background: radial-gradient(circle, rgba(229, 9, 20, 0.25) 0%, transparent 70%);
+            filter: blur(12px);
         }
 
         .pointer {
@@ -127,6 +133,7 @@
             width: 24px;
             height: 32px;
             z-index: 20;
+            filter: drop-shadow(0px 4px 6px rgba(0,0,0,0.8));
         }
 
         .pointer::after {
@@ -159,6 +166,7 @@
             border: 3px solid #3a3a4c;
             border-radius: 50%;
             z-index: 15;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.6);
             display: flex;
             justify-content: center;
             align-items: center;
@@ -170,6 +178,7 @@
             height: 14px;
             background: var(--primary-red);
             border-radius: 50%;
+            box-shadow: 0 0 8px var(--primary-red);
         }
 
         .spin-btn {
@@ -183,12 +192,18 @@
             box-shadow: 0 8px 25px rgba(229, 9, 20, 0.4);
             cursor: pointer;
             margin-top: 5px;
+            transition: transform 0.15s ease;
+        }
+
+        .spin-btn:active {
+            transform: scale(0.94);
         }
 
         .spin-btn:disabled {
             background: #2c2c35;
             color: #666;
             cursor: not-allowed;
+            box-shadow: none;
         }
 
         #result-area {
@@ -204,6 +219,7 @@
             transform: translateY(20px) scale(0.95);
             transition: all 0.5s cubic-bezier(0.18, 0.89, 0.32, 1.28);
             pointer-events: none;
+            backdrop-filter: blur(15px);
         }
 
         #result-area.show {
@@ -216,6 +232,7 @@
             font-size: 11px;
             font-weight: 700;
             text-transform: uppercase;
+            letter-spacing: 1.5px;
             color: var(--accent-gold);
             margin-bottom: 6px;
         }
@@ -248,6 +265,11 @@
             gap: 8px;
             width: 100%;
             text-decoration: none;
+            transition: background 0.2s;
+        }
+
+        .lernbar-btn:active {
+            background: rgba(229, 9, 20, 0.3);
         }
 
         .search-box {
@@ -267,6 +289,10 @@
             outline: none;
         }
 
+        .search-input::placeholder {
+            color: #777;
+        }
+
         .knot-list {
             width: 90%;
             max-width: 360px;
@@ -280,6 +306,7 @@
             border: 1px solid rgba(255, 255, 255, 0.08);
             border-radius: 16px;
             padding: 16px;
+            backdrop-filter: blur(15px);
         }
 
         .knot-card-header {
@@ -301,6 +328,7 @@
             border-radius: 6px;
             background: rgba(229, 9, 20, 0.2);
             color: #ff6b6b;
+            border: 1px solid rgba(229, 9, 20, 0.4);
             font-weight: 700;
             text-transform: uppercase;
         }
@@ -320,6 +348,7 @@
             padding: 8px 10px;
             border-radius: 0 8px 8px 0;
             margin-bottom: 12px;
+            line-height: 1.35;
         }
     </style>
 </head>
@@ -335,6 +364,7 @@
         </div>
     </header>
 
+    <!-- ROULETTE VIEW -->
     <div id="roulette-view" class="view-content active">
         <div class="wheel-stage">
             <div class="wheel-glow"></div>
@@ -355,25 +385,86 @@
         </div>
     </div>
 
+    <!-- LIBRARY VIEW -->
     <div id="library-view" class="view-content">
         <div class="search-box">
-            <input type="text" id="search-input" class="search-input" placeholder="🔍 Knoten suchen..." oninput="filterLibrary()">
+            <input type="text" id="search-input" class="search-input" placeholder="🔍 Knoten oder Verwendungszweck suchen..." oninput="filterLibrary()">
         </div>
         <div class="knot-list" id="knot-list"></div>
     </div>
 
     <script>
         const knots = [
-            { name: "Spierenstich", type: "Sicherung", url: "https://www.feuerwehr-lernbar.bayern/post/ib_spierenstich", desc: "Vorrangig zur Sicherung eines anderen Knotens eingesetzt.", safety: "⚠️ FwDV 1 Hinweis: Möglichst nah am zu sichernden Knoten anlegen." },
-            { name: "Achterknoten gelegt", type: "Gelegt", url: "https://www.feuerwehr-lernbar.bayern/post/ib_achterknoten-gelegt", desc: "Verbindungs- und Befestigungsknoten zum Vorbereiten oder Stoppen.", safety: "⚠️ Hinweis: Dient auch als Stoppknoten." },
-            { name: "Achterknoten gestochen", type: "Gestochen", url: "https://www.feuerwehr-lernbar.bayern/post/ib_achterknoten-gestochen", desc: "Einbindung eines Feuerwehrdienstleistenden im Haltegurt.", safety: "⚠️ FwDV 1 Vorschrift: Mit Spierenstich sichern!" },
-            { name: "Mastwurf gelegt", type: "Gelegt", url: "https://www.feuerwehr-lernbar.bayern/post/ib_mastwurf-gelegt", desc: "Zum Anschlagen an offenen Leitungsenden oder Geräten.", safety: "⚠️ FwDV 1 Hinweis: Mit Spierenstich sichern." },
-            { name: "Mastwurf gestochen", type: "Gestochen", url: "https://www.feuerwehr-lernbar.bayern/post/ib_mastwurf-gestochen", desc: "Zum Anschlagen an festen Objekten.", safety: "⚠️ FwDV 1 Hinweis: Zwingend mit Spierenstich sichern!" },
-            { name: "Zimmermannsschlag", type: "Befestigung", url: "https://www.feuerwehr-lernbar.bayern/post/ib_zimmermannsschlag", desc: "Befestigungsknoten zum Hochziehen von Rundholz oder Schläuchen.", safety: "⚠️ FwDV 1 Hinweis: Nur unter permanenter Zugbelastung stabil!" },
-            { name: "Halbmastw. gelegt", type: "Gelegt", url: "https://www.feuerwehr-lernbar.bayern/post/ib_halbmastwurfsicherung-gelegt", desc: "Gelegte Variante der Halbmastwurfsicherung.", safety: "⚠️ Vorschrift: Nur mit zugelassenen HMS-Karabinern verwenden." },
-            { name: "Doppelter Ankerstich gest.", type: "Gestochen", url: "https://www.feuerwehr-lernbar.bayern/post/ib_doppelter-ankerstich-gestochen", desc: "Gestochene Ausführung zum Befestigen von Ausrüstung.", safety: "⚠️ Hinweis: Bei einseitiger Belastung ggf. sichern." },
-            { name: "Doppelter Ankerstich geg.", type: "Gelegt", url: "https://www.feuerwehr-lernbar.bayern/post/ib_doppelter-ankerstich-gelegt", desc: "Vorrangig zum Befestigen und Führen von Ausrüstung.", safety: "⚠️ Achtung: Zieht sich unter Belastung zu." },
-            { name: "Schotenstich", type: "Standard", url: "https://www.feuerwehr-lernbar.bayern/post/ib_schotenstich", desc: "Zum sicheren Verbinden von zwei Leinen.", safety: "⚠️ FwDV 1 Hinweis: Nicht zur Personensicherung zugelassen!" }
+            { 
+                name: "Spierenstich", 
+                type: "Sicherung",
+                url: "https://www.feuerwehr-lernbar.bayern/post/ib_spierenstich",
+                desc: "Vorrangig zur Sicherung eines anderen Knotens (z. B. am freien Leinenende des Mastwurfs) eingesetzt.",
+                safety: "⚠️ FwDV 1 Hinweis: Die Hintersicherung ist möglichst nah am zu sichernden Knoten anzulegen."
+            },
+            { 
+                name: "Achterknoten gelegt", 
+                type: "Gelegt",
+                url: "https://www.feuerwehr-lernbar.bayern/post/ib_achterknoten-gelegt",
+                desc: "Verbindungs- und Befestigungsknoten zum Vorbereiten oder Stoppen am Leinenende.",
+                safety: "⚠️ Hinweis: Dient auch als Stoppknoten gegen das Durchrutschen der Leine."
+            },
+            { 
+                name: "Achterknoten gestochen", 
+                type: "Gestochen",
+                url: "https://www.feuerwehr-lernbar.bayern/post/ib_achterknoten-gestochen",
+                desc: "Einbindung eines Feuerwehrdienstleistenden im Feuerwehr-Haltegurt beim Halten und Sichern.",
+                safety: "⚠️ FwDV 1 Vorschrift: Ausführung mit anschließender Sicherung durch einen Spierenstich!"
+            },
+            { 
+                name: "Mastwurf gelegt", 
+                type: "Gelegt",
+                url: "https://www.feuerwehr-lernbar.bayern/post/ib_mastwurf-gelegt",
+                desc: "Zum Anschlagen an offenen Leitungsenden, Armaturen oder Geräten (z. B. Saugkorb/Saugstrahlrohr).",
+                safety: "⚠️ FwDV 1 Hinweis: Muss mit einem Spierenstich am freien Leinenende gesichert werden."
+            },
+            { 
+                name: "Mastwurf gestochen", 
+                type: "Gestochen",
+                url: "https://www.feuerwehr-lernbar.bayern/post/ib_mastwurf-gestochen",
+                desc: "Zum Anschlagen an festen Objekten (z. B. Pfahl, Geländer oder Festpunkt beim Selbstretten).",
+                safety: "⚠️ FwDV 1 Hinweis: Zwingend mit Spierenstich sichern!"
+            },
+            { 
+                name: "Zimmermannsschlag", 
+                type: "Befestigung",
+                url: "https://www.feuerwehr-lernbar.bayern/post/ib_zimmermannsschlag",
+                desc: "Befestigungsknoten zum Hochziehen von langem Rundholz, Ästen oder Saugschläuchen.",
+                safety: "⚠️ FwDV 1 Hinweis: Nur unter permanenter Zugbelastung stabil!"
+            },
+            { 
+                name: "Halbmastw. gelegt", 
+                type: "Gelegt",
+                url: "https://www.feuerwehr-lernbar.bayern/post/ib_halbmastwurfsicherung-gelegt",
+                desc: "Gelegte Variante der Halbmastwurfsicherung für die dynamische Personensicherung.",
+                safety: "⚠️ Vorschrift: Nur in Kombination mit zugelassenen HMS-Karabinern verwenden."
+            },
+            { 
+                name: "Doppelter Ankerstich gest.", 
+                type: "Gestochen",
+                url: "https://www.feuerwehr-lernbar.bayern/post/ib_doppelter-ankerstich-gestochen",
+                desc: "Gestochene Ausführung zum Befestigen und Führen von Ausrüstung an geschlossenen Objekten.",
+                safety: "⚠️ Hinweis: Bei einseitiger Belastung ggf. mit Spierenstich nachsichern."
+            },
+            { 
+                name: "Doppelter Ankerstich geg.", 
+                type: "Gelegt",
+                url: "https://www.feuerwehr-lernbar.bayern/post/ib_doppelter-ankerstich-gelegt",
+                desc: "Vorrangig zum Befestigen und Führen von Ausrüstung sowie Anschlagen von Bandschlingen.",
+                safety: "⚠️ Achtung: Zieht sich unter Belastung zu und lockert sich bei Entlastung."
+            },
+            { 
+                name: "Schotenstich", 
+                type: "Standard",
+                url: "https://www.feuerwehr-lernbar.bayern/post/ib_schotenstich",
+                desc: "Zum sicheren Verbinden von zwei Leinen gleicher oder unterschiedlicher Stärke.",
+                safety: "⚠️ FwDV 1 Hinweis: Nicht zur Personensicherung zugelassen!"
+            }
         ];
 
         const canvas = document.getElementById("wheel-canvas");
@@ -407,6 +498,7 @@
             const centerX = canvas.width / 2;
             const centerY = canvas.height / 2;
             const radius = centerX - 10;
+
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
             for (let i = 0; i < numSlices; i++) {
@@ -416,4 +508,85 @@
                 ctx.beginPath();
                 ctx.moveTo(centerX, centerY);
                 ctx.arc(centerX, centerY, radius, startAngle, endAngle);
-                ctx.fillStyle = i % 2 === 0 ?
+                ctx.fillStyle = i % 2 === 0 ? "#b71c1c" : "#1c1c24";
+                ctx.fill();
+
+                ctx.strokeStyle = "rgba(0,0,0,0.5)";
+                ctx.lineWidth = 3;
+                ctx.stroke();
+
+                ctx.save();
+                ctx.translate(centerX, centerY);
+                ctx.rotate(startAngle + sliceAngle / 2);
+                ctx.textAlign = "right";
+                ctx.fillStyle = "#ffffff";
+                ctx.font = "bold 20px -apple-system, BlinkMacSystemFont, Arial, sans-serif";
+                ctx.fillText(knots[i].name, radius - 25, 7);
+                ctx.restore();
+            }
+        }
+
+        drawWheel();
+
+        spinBtn.addEventListener("click", () => {
+            if (spinBtn.disabled) return;
+            
+            spinBtn.disabled = true;
+            resultArea.classList.remove("show");
+
+            const spins = (Math.floor(Math.random() * 4) + 5) * 360;
+            const randomDegree = Math.floor(Math.random() * 360);
+            
+            currentRotation += (spins + randomDegree);
+            canvas.style.transform = `rotate(${currentRotation}deg)`;
+
+            setTimeout(() => {
+                spinBtn.disabled = false;
+
+                const normalizedRotation = currentRotation % 360;
+                const angleAtTop = (360 - normalizedRotation) % 360;
+                const sliceSize = 360 / numSlices;
+                const winningIndex = Math.floor(angleAtTop / sliceSize);
+                
+                const winner = knots[winningIndex];
+
+                knotNameDisplay.textContent = winner.name;
+                knotDescDisplay.textContent = winner.desc;
+                lernbarLinkBtn.href = winner.url;
+
+                resultArea.classList.add("show");
+            }, 4500);
+        });
+
+        function renderLibrary(items) {
+            knotListContainer.innerHTML = "";
+            items.forEach(knot => {
+                const card = document.createElement("div");
+                card.className = "knot-card";
+                card.innerHTML = `
+                    <div class="knot-card-header">
+                        <div class="knot-title">${knot.name}</div>
+                        <div class="knot-badge">${knot.type}</div>
+                    </div>
+                    <div class="knot-detail">${knot.desc}</div>
+                    <div class="safety-note">${knot.safety}</div>
+                    <a class="lernbar-btn" href="${knot.url}" target="_blank" rel="noopener">
+                        📖 Offizielle Lernbar-Anleitung ↗
+                    </a>
+                `;
+                knotListContainer.appendChild(card);
+            });
+        }
+
+        function filterLibrary() {
+            const query = document.getElementById("search-input").value.toLowerCase();
+            const filtered = knots.filter(k => 
+                k.name.toLowerCase().includes(query) || 
+                k.desc.toLowerCase().includes(query) || 
+                k.type.toLowerCase().includes(query)
+            );
+            renderLibrary(filtered);
+        }
+    </script>
+</body>
+</html>
