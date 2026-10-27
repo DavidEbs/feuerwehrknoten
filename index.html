@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Feuerwehrknoten Roulette & FwDV 1 Nachschlagewerk</title>
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Knoten Roulette">
+    <meta name="theme-color" content="#0d0d11">
+    
+    <style>
+        :root {
+            --bg-color: #0d0d11;
+            --card-bg: rgba(25, 25, 35, 0.75);
+            --primary-red: #e50914;
+            --accent-gold: #ffcc00;
+            --text-light: #f5f5f7;
+            --text-dim: #a1a1a6;
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            background-image: 
+                radial-gradient(circle at 50% 0%, rgba(229, 9, 20, 0.15), transparent 70%),
+                radial-gradient(circle at 50% 100%, rgba(20, 20, 30, 0.8), transparent 80%);
+            color: var(--text-light);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            overflow-x: hidden;
+            padding-bottom: 40px;
+        }
+
+        header {
+            margin-top: 25px;
+            text-align: center;
+            padding: 0 20px;
+        }
+
+        h1 {
+            font-size: 26px;
+            font-weight: 800;
+            margin: 0 0 4px 0;
+            color: #ffffff;
+        }
+
+        p.subtitle {
+            color: var(--text-dim);
+            font-size: 13px;
+            margin: 0;
+        }
+
+        .nav-switch {
+            display: flex;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 3px;
+            margin: 18px auto 10px auto;
+            width: 310px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .nav-btn {
+            flex: 1;
+            padding: 8px 0;
+            border: none;
+            background: transparent;
+            color: var(--text-dim);
+            font-size: 13px;
+            font-weight: 600;
+            border-radius: 9px;
+            cursor: pointer;
+        }
+
+        .nav-btn.active {
+            background: var(--primary-red);
+            color: #ffffff;
+        }
+
+        .view-content {
+            display: none;
+            width: 100%;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .view-content.active {
+            display: flex;
+        }
+
+        .wheel-stage {
+            position: relative;
+            margin: 20px auto 15px auto;
+            width: 320px;
+            height: 320px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .wheel-glow {
+            position: absolute;
+            width: 310px;
+            height: 310px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(229, 9, 20, 0.2) 0%, transparent 70%);
+            filter: blur(10px);
+        }
+
+        .pointer {
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 24px;
+            height: 32px;
+            z-index: 20;
+        }
+
+        .pointer::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 0;
+            height: 0;
+            border-left: 12px solid transparent;
+            border-right: 12px solid transparent;
+            border-top: 28px solid var(--primary-red);
+        }
+
+        #wheel-canvas {
+            position: relative;
+            z-index: 10;
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            box-shadow: 0 0 25px rgba(0, 0, 0, 0.9), 0 0 0 6px rgba(255, 255, 255, 0.05);
+            transition: transform 4.5s cubic-bezier(0.15, 0.85, 0.15, 1);
+        }
+
+        .center-pin {
+            position: absolute;
+            width: 44px;
+            height: 44px;
+            background: radial-gradient(circle, #2c2c36 0%, #111116 100%);
+            border: 3px solid #3a3a4c;
+            border-radius: 50%;
+            z-index: 15;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .center-pin::after {
+            content: '';
+            width: 14px;
+            height: 14px;
+            background: var(--primary-red);
+            border-radius: 50%;
+        }
+
+        .spin-btn {
+            background: linear-gradient(180deg, #e50914 0%, #b20710 100%);
+            color: white;
+            border: none;
+            padding: 16px 42px;
+            font-size: 18px;
+            font-weight: 700;
+            border-radius: 30px;
+            box-shadow: 0 8px 25px rgba(229, 9, 20, 0.4);
+            cursor: pointer;
+            margin-top: 5px;
+        }
+
+        .spin-btn:disabled {
+            background: #2c2c35;
+            color: #666;
+            cursor: not-allowed;
+        }
+
+        #result-area {
+            margin-top: 18px;
+            width: 90%;
+            max-width: 360px;
+            background: var(--card-bg);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 20px;
+            text-align: center;
+            opacity: 0;
+            transform: translateY(20px) scale(0.95);
+            transition: all 0.5s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+            pointer-events: none;
+        }
+
+        #result-area.show {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+            pointer-events: auto;
+        }
+
+        .result-tag {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--accent-gold);
+            margin-bottom: 6px;
+        }
+
+        #knot-name {
+            font-size: 22px;
+            font-weight: 800;
+            color: #ffffff;
+            margin-bottom: 8px;
+        }
+
+        #knot-desc {
+            font-size: 13px;
+            color: var(--text-dim);
+            margin-bottom: 16px;
+            line-height: 1.4;
+        }
+
+        .lernbar-btn {
+            background: rgba(229, 9, 20, 0.15);
+            color: #ffffff;
+            border: 1px solid var(--primary-red);
+            padding: 12px 20px;
+            font-size: 14px;
+            font-weight: 600;
+            border-radius: 12px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            text-decoration: none;
+        }
+
+        .search-box {
+            width: 90%;
+            max-width: 360px;
+            margin-bottom: 15px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px 16px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: #fff;
+            font-size: 14px;
+            outline: none;
+        }
+
+        .knot-list {
+            width: 90%;
+            max-width: 360px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .knot-card {
+            background: var(--card-bg);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 16px;
+        }
+
+        .knot-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .knot-title {
+            font-size: 17px;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .knot-badge {
+            font-size: 10px;
+            padding: 3px 8px;
+            border-radius: 6px;
+            background: rgba(229, 9, 20, 0.2);
+            color: #ff6b6b;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .knot-detail {
+            font-size: 13px;
+            color: var(--text-dim);
+            margin-bottom: 12px;
+            line-height: 1.45;
+        }
+
+        .safety-note {
+            font-size: 12px;
+            background: rgba(255, 204, 0, 0.08);
+            border-left: 3px solid var(--accent-gold);
+            color: #e6c200;
+            padding: 8px 10px;
+            border-radius: 0 8px 8px 0;
+            margin-bottom: 12px;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Feuerwehrknoten</h1>
+        <p class="subtitle">Roulette & FwDV 1 Nachschlagewerk</p>
+        
+        <div class="nav-switch">
+            <button class="nav-btn active" onclick="switchView('roulette')">🎲 Roulette</button>
+            <button class="nav-btn" onclick="switchView('library')">📖 FwDV 1 Bibliothek</button>
+        </div>
+    </header>
+
+    <div id="roulette-view" class="view-content active">
+        <div class="wheel-stage">
+            <div class="wheel-glow"></div>
+            <div class="pointer"></div>
+            <canvas id="wheel-canvas" width="600" height="600"></canvas>
+            <div class="center-pin"></div>
+        </div>
+
+        <button id="spin-btn" class="spin-btn">Knoten Drehen</button>
+
+        <div id="result-area">
+            <div class="result-tag">Ausgewählter Knoten</div>
+            <div id="knot-name"></div>
+            <div id="knot-desc"></div>
+            <a id="lernbar-link-btn" class="lernbar-btn" href="#" target="_blank" rel="noopener">
+                📖 Offizielle Lernbar-Anleitung ↗
+            </a>
+        </div>
+    </div>
+
+    <div id="library-view" class="view-content">
+        <div class="search-box">
+            <input type="text" id="search-input" class="search-input" placeholder="🔍 Knoten suchen..." oninput="filterLibrary()">
+        </div>
+        <div class="knot-list" id="knot-list"></div>
+    </div>
+
+    <script>
+        const knots = [
+            { name: "Spierenstich", type: "Sicherung", url: "https://www.feuerwehr-lernbar.bayern/post/ib_spierenstich", desc: "Vorrangig zur Sicherung eines anderen Knotens eingesetzt.", safety: "⚠️ FwDV 1 Hinweis: Möglichst nah am zu sichernden Knoten anlegen." },
+            { name: "Achterknoten gelegt", type: "Gelegt", url: "https://www.feuerwehr-lernbar.bayern/post/ib_achterknoten-gelegt", desc: "Verbindungs- und Befestigungsknoten zum Vorbereiten oder Stoppen.", safety: "⚠️ Hinweis: Dient auch als Stoppknoten." },
+            { name: "Achterknoten gestochen", type: "Gestochen", url: "https://www.feuerwehr-lernbar.bayern/post/ib_achterknoten-gestochen", desc: "Einbindung eines Feuerwehrdienstleistenden im Haltegurt.", safety: "⚠️ FwDV 1 Vorschrift: Mit Spierenstich sichern!" },
+            { name: "Mastwurf gelegt", type: "Gelegt", url: "https://www.feuerwehr-lernbar.bayern/post/ib_mastwurf-gelegt", desc: "Zum Anschlagen an offenen Leitungsenden oder Geräten.", safety: "⚠️ FwDV 1 Hinweis: Mit Spierenstich sichern." },
+            { name: "Mastwurf gestochen", type: "Gestochen", url: "https://www.feuerwehr-lernbar.bayern/post/ib_mastwurf-gestochen", desc: "Zum Anschlagen an festen Objekten.", safety: "⚠️ FwDV 1 Hinweis: Zwingend mit Spierenstich sichern!" },
+            { name: "Zimmermannsschlag", type: "Befestigung", url: "https://www.feuerwehr-lernbar.bayern/post/ib_zimmermannsschlag", desc: "Befestigungsknoten zum Hochziehen von Rundholz oder Schläuchen.", safety: "⚠️ FwDV 1 Hinweis: Nur unter permanenter Zugbelastung stabil!" },
+            { name: "Halbmastw. gelegt", type: "Gelegt", url: "https://www.feuerwehr-lernbar.bayern/post/ib_halbmastwurfsicherung-gelegt", desc: "Gelegte Variante der Halbmastwurfsicherung.", safety: "⚠️ Vorschrift: Nur mit zugelassenen HMS-Karabinern verwenden." },
+            { name: "Doppelter Ankerstich gest.", type: "Gestochen", url: "https://www.feuerwehr-lernbar.bayern/post/ib_doppelter-ankerstich-gestochen", desc: "Gestochene Ausführung zum Befestigen von Ausrüstung.", safety: "⚠️ Hinweis: Bei einseitiger Belastung ggf. sichern." },
+            { name: "Doppelter Ankerstich geg.", type: "Gelegt", url: "https://www.feuerwehr-lernbar.bayern/post/ib_doppelter-ankerstich-gelegt", desc: "Vorrangig zum Befestigen und Führen von Ausrüstung.", safety: "⚠️ Achtung: Zieht sich unter Belastung zu." },
+            { name: "Schotenstich", type: "Standard", url: "https://www.feuerwehr-lernbar.bayern/post/ib_schotenstich", desc: "Zum sicheren Verbinden von zwei Leinen.", safety: "⚠️ FwDV 1 Hinweis: Nicht zur Personensicherung zugelassen!" }
+        ];
+
+        const canvas = document.getElementById("wheel-canvas");
+        const ctx = canvas.getContext("2d");
+        const spinBtn = document.getElementById("spin-btn");
+        const resultArea = document.getElementById("result-area");
+        const knotNameDisplay = document.getElementById("knot-name");
+        const knotDescDisplay = document.getElementById("knot-desc");
+        const lernbarLinkBtn = document.getElementById("lernbar-link-btn");
+        const knotListContainer = document.getElementById("knot-list");
+
+        const numSlices = knots.length;
+        const sliceAngle = (2 * Math.PI) / numSlices;
+        let currentRotation = 0;
+
+        function switchView(view) {
+            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.view-content').forEach(v => v.classList.remove('active'));
+
+            if (view === 'roulette') {
+                document.querySelectorAll('.nav-btn')[0].classList.add('active');
+                document.getElementById('roulette-view').classList.add('active');
+            } else {
+                document.querySelectorAll('.nav-btn')[1].classList.add('active');
+                document.getElementById('library-view').classList.add('active');
+                renderLibrary(knots);
+            }
+        }
+
+        function drawWheel() {
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const radius = centerX - 10;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            for (let i = 0; i < numSlices; i++) {
+                const startAngle = -Math.PI / 2 + i * sliceAngle;
+                const endAngle = startAngle + sliceAngle;
+
+                ctx.beginPath();
+                ctx.moveTo(centerX, centerY);
+                ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+                ctx.fillStyle = i % 2 === 0 ?
